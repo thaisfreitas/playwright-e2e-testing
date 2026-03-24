@@ -1,0 +1,96 @@
+# ==============================================================================
+# GitHub Actions CI Pipeline for Playwright E2E Tests
+# ==============================================================================
+#
+# This workflow runs our end-to-end browser tests automatically on every push
+# and pull request. Unlike the sibling API testing project, E2E tests require
+# real browsers — this workflow installs them and runs tests across chromium,
+# firefox, and webkit.
+#
+# WHY CI FOR E2E TESTS?
+# - Catch UI regressions before they reach production
+# - Validate across multiple browsers automatically
+# - Generate test reports with screenshots, videos, and traces
+# - Run in a clean environment that mirrors production
+#
+# WORKFLOW STRUCTURE:
+# 1. Checkout code
+# 2. Set up Node.js with dependency caching
+# 3. Install dependencies and Playwright browsers
+# 4. Run tests with sharding for parallelism
+# 5. Upload HTML report and traces as artifacts (even on failure)
+#
+# SHARDING:
+# Tests are split across multiple parallel jobs (shards) to reduce total run time.
+# Each shard runs a subset of tests; reports are merged at the end.
+#
+# NOTE: Since we're testing a public site (The Internet), no secrets are needed.
+# For private apps, add secrets via GitHub Settings > Secrets.
+
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+  # Allow manual triggering from the GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Run tests across all three browser projects defined in playwright.config.ts
+        project: [chromium, firefox, webkit]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Install browsers with OS-level dependencies (--with-deps).
+      # This is critical for CI: headless browsers need system libraries
+      # (libgbm, libasound, etc.) that aren't in the default CI image.
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run E2E tests — ${{ matrix.project }}
+        run: npx playwright test --project=${{ matrix.project }}
+        env:
+          BASE_URL: https://the-internet.herokuapp.com
+          CI: true
+
+      # Always upload reports, even when tests fail. This lets you
+      # investigate failures by downloading the HTML report artifact.
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: playwright-report/
+          retention-days: 30
+
+      # Upload test results (screenshots, videos, traces) for debugging.
+      # Traces are especially valuable — they contain DOM snapshots, network
+      # logs, and console output for every action in a failed test.
+      - name: Upload test results (traces, screenshots, videos)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.project }}
+          path: test-results/
+          retention-days: 14

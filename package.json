@@ -1,0 +1,36 @@
+{
+  "name": "playwright-e2e-testing",
+  "version": "1.0.0",
+  "description": "Playwright E2E testing template using The Internet — a learning-oriented project covering all core concepts of end-to-end browser testing with Playwright and TypeScript.",
+  "private": true,
+  "scripts": {
+    "test": "npx playwright test",
+    "test:auth": "npx playwright test tests/e2e/auth/",
+    "test:forms": "npx playwright test tests/e2e/forms-inputs/",
+    "test:dynamic": "npx playwright test tests/e2e/dynamic-content/",
+    "test:interactions": "npx playwright test tests/e2e/interactions/",
+    "test:files": "npx playwright test tests/e2e/files/",
+    "test:frames": "npx playwright test tests/e2e/frames/",
+    "test:advanced": "npx playwright test tests/e2e/advanced/",
+    "test:navigation": "npx playwright test tests/e2e/navigation/",
+    "test:visual": "npx playwright test tests/e2e/visual/",
+    "report": "npx playwright show-report"
+  },
+  "keywords": [
+    "playwright",
+    "e2e-testing",
+    "typescript",
+    "the-internet",
+    "page-object-model",
+    "template"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "@types/node": "^22.15.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7"
+  }
+}
