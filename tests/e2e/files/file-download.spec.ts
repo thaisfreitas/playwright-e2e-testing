@@ -33,7 +33,7 @@ test.describe('File Download', () => {
   });
 
   test('should download a file and verify its name @files', async ({ page }) => {
-    const downloadLink = page.locator('a').first();
+    const downloadLink = page.locator('.example a').first();
     const expectedFilename = await downloadLink.textContent();
 
     const [download] = await Promise.all([
@@ -45,7 +45,7 @@ test.describe('File Download', () => {
   });
 
   test('should save downloaded file to disk @files', async ({ page }) => {
-    const downloadLink = page.locator('a').first();
+    const downloadLink = page.locator('.example a').first();
 
     const [download] = await Promise.all([
       page.waitForEvent('download'),

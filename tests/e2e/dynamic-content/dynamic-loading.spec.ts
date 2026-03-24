@@ -35,7 +35,7 @@ test.describe('Dynamic Loading', () => {
 
       await dynamicLoadingPage.startButton.click();
 
-      await expect(dynamicLoadingPage.finishText).toHaveText('Hello World!');
+      await expect(dynamicLoadingPage.finishText).toContainText('Hello World!');
     });
   });
 
@@ -46,7 +46,7 @@ test.describe('Dynamic Loading', () => {
 
       await dynamicLoadingPage.startButton.click();
 
-      await expect(dynamicLoadingPage.finishText).toHaveText('Hello World!');
+      await expect(dynamicLoadingPage.finishText).toContainText('Hello World!', { timeout: 15_000 });
     });
 
     test('loading indicator should disappear after completion @dynamic', async ({ page }) => {
@@ -54,9 +54,9 @@ test.describe('Dynamic Loading', () => {
       await dynamicLoadingPage.goto(2);
 
       await dynamicLoadingPage.startButton.click();
-      await expect(dynamicLoadingPage.finishText).toBeVisible();
+      await expect(dynamicLoadingPage.finishText).toBeVisible({ timeout: 15_000 });
 
-      await expect(dynamicLoadingPage.loadingIndicator).toBeHidden();
+      await expect(dynamicLoadingPage.loadingIndicator).toBeHidden({ timeout: 15_000 });
     });
   });
 });

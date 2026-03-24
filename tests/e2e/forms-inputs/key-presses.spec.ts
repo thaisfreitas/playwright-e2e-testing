@@ -30,7 +30,6 @@ test.describe('Key Presses', () => {
 
   const keysToTest = [
     { key: 'a', expected: 'A' },
-    { key: 'Enter', expected: 'ENTER' },
     { key: 'Tab', expected: 'TAB' },
     { key: 'Escape', expected: 'ESCAPE' },
     { key: 'ArrowUp', expected: 'UP' },
@@ -42,9 +41,21 @@ test.describe('Key Presses', () => {
       const input = page.locator('#target');
       const result = page.locator('#result');
 
-      await input.press(key);
+      await input.click();
+      await page.keyboard.press(key);
 
       await expect(result).toContainText(expected);
     });
   }
+
+  test('should submit form when pressing Enter @forms', async ({ page }) => {
+    const input = page.locator('#target');
+    const result = page.locator('#result');
+
+    await input.click();
+    await page.keyboard.press('Enter');
+
+    await expect(page).toHaveURL(/\/key_presses\?/);
+    await expect(result).toHaveText('');
+  });
 });

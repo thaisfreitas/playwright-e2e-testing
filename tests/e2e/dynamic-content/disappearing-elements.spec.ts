@@ -4,7 +4,7 @@
  *
  * CONCEPT: Non-deterministic UI — elements that may or may not be present.
  *
- * The Internet's Disappearing Elements page randomly shows 5 or 6 navigation
+ * The Internet's Disappearing Elements page randomly shows 4 or 5 navigation
  * links on each page load. This is intentionally non-deterministic, which makes
  * it a perfect exercise for:
  * - Soft assertions: continue test execution even if an assertion fails
@@ -33,11 +33,12 @@ test.describe('Disappearing Elements', () => {
     await page.goto(URLS.disappearingElements);
   });
 
-  test('should always have at least 5 navigation links @dynamic', async ({ page }) => {
+  test('should always have at least 4 navigation links @dynamic', async ({ page }) => {
     const links = page.locator('ul li');
     const count = await links.count();
 
-    expect(count).toBeGreaterThanOrEqual(5);
+    expect(count).toBeGreaterThanOrEqual(4);
+    expect(count).toBeLessThanOrEqual(5);
   });
 
   test('should display standard navigation items @dynamic', async ({ page }) => {
@@ -53,9 +54,9 @@ test.describe('Disappearing Elements', () => {
     const isVisible = await galleryLink.isVisible();
 
     if (isVisible) {
-      await expect(page.locator('ul li')).toHaveCount(6);
-    } else {
       await expect(page.locator('ul li')).toHaveCount(5);
+    } else {
+      await expect(page.locator('ul li')).toHaveCount(4);
     }
   });
 });

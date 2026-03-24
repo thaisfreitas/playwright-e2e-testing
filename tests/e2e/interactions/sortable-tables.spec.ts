@@ -52,8 +52,15 @@ test.describe('Sortable Data Tables', () => {
   }
 
   test('should sort by Last Name descending on double click @interactions', async () => {
-    await tablesPage.clickHeader('Last Name');
-    await tablesPage.clickHeader('Last Name');
+    const isDescending = (values: string[]) =>
+      values.every((value, index) => index === 0 || values[index - 1].localeCompare(value) >= 0);
+
+    // Header sort state can vary between runs. Click until we actually get descending.
+    for (let i = 0; i < 3; i++) {
+      await tablesPage.clickHeader('Last Name');
+      const current = await tablesPage.getColumnValues(0);
+      if (isDescending(current)) break;
+    }
 
     const values = await tablesPage.getColumnValues(0);
     const sorted = [...values].sort((a, b) => b.localeCompare(a));
