@@ -65,6 +65,9 @@ test.describe('Network Interception', () => {
       await route.abort();
     });
 
-    await expect(page.goto('/status_codes/500')).rejects.toThrow(/ERR_FAILED/);
+    // Browser engines throw different messages for aborted navigation:
+    // Chromium -> ERR_FAILED, Firefox -> NS_ERROR_FAILURE, WebKit -> Blocked by Web Inspector.
+    // We only assert that navigation is rejected.
+    await expect(page.goto('/status_codes/500')).rejects.toThrow();
   });
 });

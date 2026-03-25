@@ -31,8 +31,12 @@ test.describe('Infinite Scroll', () => {
 
     const initialCount = await infiniteScrollPage.scrollParagraphs.count();
 
-    await infiniteScrollPage.scrollToBottom();
-    await expect(infiniteScrollPage.scrollParagraphs).not.toHaveCount(initialCount);
+    await expect
+      .poll(async () => {
+        await infiniteScrollPage.scrollToBottom();
+        return infiniteScrollPage.scrollParagraphs.count();
+      }, { timeout: 15_000 })
+      .toBeGreaterThan(initialCount);
   });
 
   test('should load content using mouse wheel @advanced', async ({ page }) => {
@@ -41,7 +45,11 @@ test.describe('Infinite Scroll', () => {
 
     const initialCount = await infiniteScrollPage.scrollParagraphs.count();
 
-    await page.mouse.wheel(0, 2000);
-    await expect(infiniteScrollPage.scrollParagraphs).not.toHaveCount(initialCount);
+    await expect
+      .poll(async () => {
+        await page.mouse.wheel(0, 2000);
+        return infiniteScrollPage.scrollParagraphs.count();
+      }, { timeout: 15_000 })
+      .toBeGreaterThan(initialCount);
   });
 });
