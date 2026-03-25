@@ -4,8 +4,7 @@
 #
 # This workflow runs our end-to-end browser tests automatically on every push
 # and pull request. Unlike the sibling API testing project, E2E tests require
-# real browsers — this workflow installs them and runs tests across chromium,
-# firefox, and webkit.
+# real browsers.
 #
 # WHY CI FOR E2E TESTS?
 # - Catch UI regressions before they reach production
@@ -14,11 +13,9 @@
 # - Run in a clean environment that mirrors production
 #
 # WORKFLOW STRUCTURE:
-# 1. Checkout code
-# 2. Set up Node.js with dependency caching
-# 3. Install dependencies and Playwright browsers
-# 4. Run tests with sharding for parallelism
-# 5. Upload HTML report and traces as artifacts (even on failure)
+# 1. Functional matrix across chromium/firefox/webkit (excludes @visual)
+# 2. Dedicated visual job on chromium (macOS/darwin baselines)
+# 3. Upload HTML report and traces as artifacts (even on failure)
 #
 # SHARDING:
 # Tests are split across multiple parallel jobs (shards) to reduce total run time.
@@ -39,14 +36,16 @@ on:
   workflow_dispatch:
 
 jobs:
-  e2e-tests:
+  e2e-functional:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     strategy:
       fail-fast: false
       matrix:
-        # Run tests across all three browser projects defined in playwright.config.ts
+        # Run functional tests across all three browser projects.
+        # We explicitly exclude @visual because visual snapshots are OS-specific
+        # and this matrix is intended for fast functional confidence.
         project: [chromium, firefox, webkit]
 
     steps:
@@ -68,8 +67,8 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Run E2E tests — ${{ matrix.project }}
-        run: npx playwright test --project=${{ matrix.project }}
+      - name: Run functional tests — ${{ matrix.project }}
+        run: npx playwright test --project=${{ matrix.project }} --grep-invert @visual
         env:
           BASE_URL: https://the-internet.herokuapp.com
           CI: true
@@ -92,5 +91,50 @@ jobs:
         if: always()
         with:
           name: test-results-${{ matrix.project }}
+          path: test-results/
+          retention-days: 14
+
+  # Dedicated visual regression job on macOS.
+  # This keeps visual checks deterministic and avoids failing all functional jobs
+  # when snapshot files differ across operating systems.
+  e2e-visual:
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run visual tests (chromium)
+        run: npx playwright test tests/e2e/visual/ --project=chromium
+        env:
+          BASE_URL: https://the-internet.herokuapp.com
+          CI: true
+
+      - name: Upload visual report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-visual-chromium
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Upload visual test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-visual-chromium
           path: test-results/
           retention-days: 14
